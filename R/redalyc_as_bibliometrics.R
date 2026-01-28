@@ -98,9 +98,13 @@ redalyc_as_bibliometrics <- function(x, sep = ";", db = "REDALYC") {
     DB = db
   )
 
+  extra <- redalyc_add_affiliations_c1(x)
+  out$Affiliations <- extra$Affiliations
+  out$C1 <- extra$C1
+
   # Asegurar tipos compatibles (muchas columnas son CHARACTER en bibliometrix):contentReference[oaicite:5]{index=5}
   out <- dplyr::mutate(out,
-                       dplyr::across(c(UT, AU, TI, SO, DE, ID, AB, DI, DB, VL, IS, ISSN, Page.start, Page.end),
+                       dplyr::across(c(UT, AU, TI, SO, DE, ID, AB, DI, DB, VL, IS, ISSN, Page.start, Page.end, Affiliations, C1),
                                      ~ dplyr::if_else(is.na(.x), NA_character_, as.character(.x))))
 
   out

@@ -70,7 +70,7 @@ redalyc_as_bibliometrics <- function(x, sep = ";",
   else if(lang =='pt'){out <- out |> dplyr::filter(lang == 'pt')}
 
   x <- x |>
-    dplyr::mutate(id = 1:n())|>
+    dplyr::mutate(id = dplyr::row_number())|>
     dplyr::select(-resumen, -palabras) |>
     dplyr::left_join(out)
 

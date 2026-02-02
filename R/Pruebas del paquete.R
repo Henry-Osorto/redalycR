@@ -1,8 +1,8 @@
 
 # Pruebas del paquete
 
-setwd('~/')
-library(redalycR)
+#setwd('~/')
+#library(redalycR)
 
 query <- "\"capital humano\" AND \"desarrollo economico\""
 
@@ -13,14 +13,14 @@ query <- "\"capital humano\" AND \"desarrollo economico\""
 #write.csv(x = df, file = 'data_redalyc.csv', row.names = F)
 #dplyr::glimpse(df)
 
-df <- read.csv('data_redalyc.csv')
-redalyc_write_bib(df.bi, path = 'ejemplo_bibliografica.txt')
-df.bi <- redalyc_as_bibliometrics(df)
+#df <- read.csv('data_redalyc.csv')
+#redalyc_write_bib(df.bi, path = 'ejemplo_bibliografica.txt')
+#df.bi <- redalyc_as_bibliometrics(df)
 
-class(df)
-str(df, max.level = 1)
-is.data.frame(df)
+#class(df)
+#str(df, max.level = 1)
+#is.data.frame(df)
 
-df.bi <- redalyc_lang_detect(df,col = 'palabras', 'pt')
+#df.bi <- redalyc_lang_detect(df,col = 'palabras', 'pt')
 
-df.res <- redalyc_lang_detect(df, col = 'resumen', 'pt')
+#df.res <- redalyc_lang_detect(df, col = 'resumen', 'pt')

@@ -2,20 +2,74 @@
 % Please edit documentation in R/redalyc_as_bibliometrics.R
 \name{redalyc_as_bibliometrics}
 \alias{redalyc_as_bibliometrics}
-\title{Convertir resultados Redalyc a estructura bibliometrix (Field Tags)}
+\title{Convertir resultados de Redalyc a estructura bibliometrix (Field Tags)}
 \usage{
-redalyc_as_bibliometrics(x, sep = ";", db = "REDALYC")
+redalyc_as_bibliometrics(
+  x,
+  sep = ";",
+  lang = c("auto", "es", "en", "pt"),
+  fallback_lang = "es",
+  filter_lang_rows = TRUE
+)
 }
 \arguments{
-\item{x}{data.frame/tibble devuelto por redalyc_get_all_articles() o redalyc_get_articles()$resultados}
+\item{x}{data.frame o tibble devuelto por
+\code{redalyc_get_all_articles()} o
+\code{redalyc_get_articles()$resultados}.}
 
-\item{sep}{Separador estándar para campos multivaluados (bibliometrix usa ";" por defecto).}
+\item{sep}{Separador estándar para campos multivaluados.
+Por defecto \code{";"} (convención usada por \pkg{bibliometrix}).}
 
-\item{db}{Nombre de base para DB (por defecto "REDALYC").}
+\item{lang}{Idioma objetivo para los campos textuales.
+Opciones:
+\itemize{
+\item \code{"auto"}: selecciona automáticamente el idioma dominante
+(según detección o etiquetas explícitas).
+\item \code{"es"}: español.
+\item \code{"en"}: inglés.
+\item \code{"pt"}: portugués.
+}}
+
+\item{fallback_lang}{Idioma de respaldo que se utilizará cuando el idioma
+solicitado en \code{lang} no esté disponible en el registro.
+Por defecto \code{"en"}.}
+
+\item{db}{Nombre de la base de datos a asignar en el campo \code{DB}.
+Por defecto \code{"REDALYC"}.}
 }
 \value{
-tibble con columnas tipo bibliometrix (AU, TI, SO, DE, ID, AB, PY, DI, UT, DB, ...).
+Tibble con columnas compatibles con \pkg{bibliometrix}, incluyendo:
+\itemize{
+\item \code{UT}: identificador único del artículo.
+\item \code{AU}: autores.
+\item \code{TI}: título.
+\item \code{SO}: fuente o revista.
+\item \code{DE}: palabras clave de autor.
+\item \code{ID}: palabras clave adicionales.
+\item \code{AB}: resumen normalizado por idioma.
+\item \code{PY}: año de publicación.
+\item \code{DI}: DOI.
+\item \code{DB}: base de datos de origen.
+}
 }
 \description{
-Convertir resultados Redalyc a estructura bibliometrix (Field Tags)
+Convierte los resultados devueltos por las funciones de extracción de Redalyc
+en una estructura compatible con el paquete \pkg{bibliometrix}, utilizando
+etiquetas de campo estándar (AU, TI, SO, DE, ID, AB, PY, DI, UT, DB, etc.).
+}
+\details{
+La función permite seleccionar y normalizar el idioma de los campos textuales
+(por ejemplo, resumen y palabras clave) cuando estos contienen versiones en
+múltiples idiomas, priorizando el idioma solicitado y utilizando un idioma
+de respaldo cuando sea necesario.
+
+Cuando los campos textuales contienen versiones multilingües explícitamente
+etiquetadas (por ejemplo, \code{es:}, \code{en:}, \code{pt:}), la función
+selecciona el texto correspondiente al idioma indicado en \code{lang}.
+
+Si el idioma solicitado no está disponible, se utiliza el idioma definido
+en \code{fallback_lang}, evitando la pérdida de información textual.
+
+La función garantiza que el número de filas del dataset resultante coincida
+con el número de registros originales, sin generar duplicaciones.
 }

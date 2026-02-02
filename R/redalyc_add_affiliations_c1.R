@@ -35,12 +35,10 @@ redalyc_add_affiliations_c1 <- function(df,
   revista <- df0 %>%
     select(institucionRevista, nomInstitucionRev) %>%
     distinct() %>%
-    mutate(
-      institucionRevista = suppressWarnings(as.numeric(institucionRevista)),
-      nomInstitucionRev  = as.character(nomInstitucionRev),
-      nomInstitucionRev  = if (upper) str_to_upper(nomInstitucionRev) else nomInstitucionRev,
-      nomInstitucionRev  = str_squish(nomInstitucionRev)
-    ) %>%
+    mutate(institucionRevista = suppressWarnings(as.numeric(institucionRevista)),
+           nomInstitucionRev  = as.character(nomInstitucionRev),
+           nomInstitucionRev  = if (upper) str_to_upper(nomInstitucionRev) else nomInstitucionRev,
+           nomInstitucionRev  = str_squish(nomInstitucionRev)) %>%
     arrange(institucionRevista)
 
   # instituciones de autores por documento (alineadas por posición)
@@ -49,28 +47,20 @@ redalyc_add_affiliations_c1 <- function(df,
     mutate(institucionAutores = as.character(institucionAutores)) %>%
     # separa "14805 14889" -> dos filas
     separate_longer_delim(institucionAutores, delim = inst_delim) %>%
-    mutate(
-      institucionAutores = str_squish(institucionAutores),
-      institucionAutores = na_if(institucionAutores, ""),
-      institucionAutores_num = suppressWarnings(as.numeric(institucionAutores))
-    ) %>%
+    mutate(institucionAutores = str_squish(institucionAutores),
+           institucionAutores = na_if(institucionAutores, ""),
+           institucionAutores_num = suppressWarnings(as.numeric(institucionAutores))) %>%
     drop_na(institucionAutores) %>%
     group_by(.rid) %>%
     mutate(.pos = row_number()) %>%
     ungroup() %>%
-    left_join(
-      revista,
-      by = c("institucionAutores_num" = "institucionRevista")
-    ) %>%
-    mutate(
-      # si no existe nombre, usa el id numérico (o el texto original)
-      aff = if_else(
-        is.na(nomInstitucionRev) | nomInstitucionRev == "",
-        as.character(institucionAutores),
-        nomInstitucionRev
-      ),
-      aff = str_squish(aff)
-    ) %>%
+    left_join(revista,
+              by = c("institucionAutores_num" = "institucionRevista")) %>%
+    mutate(# si no existe nombre, usa el id numérico (o el texto original)
+           aff = if_else(is.na(nomInstitucionRev) | nomInstitucionRev == "",
+                         as.character(institucionAutores),
+                         nomInstitucionRev ),
+           aff = str_squish(aff)) %>%
     select(.rid, .pos, aff)
 
   # autores por documento (alineados por posición)
@@ -78,11 +68,9 @@ redalyc_add_affiliations_c1 <- function(df,
     select(.rid, autores) %>%
     mutate(autores = as.character(autores)) %>%
     separate_longer_delim(autores, delim = authors_delim) %>%
-    mutate(
-      autor = str_squish(autores),
-      autor = na_if(autor, ""),
-      autor = if (upper) str_to_upper(autor) else autor
-    ) %>%
+    mutate(autor = str_squish(autores),
+           autor = na_if(autor, ""),
+           autor = if (upper) str_to_upper(autor) else autor) %>%
     drop_na(autor) %>%
     group_by(.rid) %>%
     mutate(.pos = row_number()) %>%
@@ -92,28 +80,20 @@ redalyc_add_affiliations_c1 <- function(df,
   # C1: autor + afiliación (si no hay afiliación, queda solo autor o "autor, <NA>" según prefieras)
   c1_long <- au_long %>%
     left_join(inst_long, by = c(".rid", ".pos")) %>%
-    mutate(
-      C1_item = case_when(
-        is.na(aff) | aff == "" ~ autor,                 # si no hay afiliación, deja solo autor
-        TRUE ~ paste0(autor, ", ", aff)
-      )
-    )
+    mutate(C1_item = case_when(is.na(aff) | aff == "" ~ autor, # si no hay afiliación, deja solo autor
+                           TRUE ~ paste0(autor, ", ", aff))    )
 
   # Affiliations: lista única de afiliaciones por documento
   aff_by_doc <- inst_long %>%
     group_by(.rid) %>%
-    summarise(
-      Affiliations = paste(unique(aff), collapse = paste0(aff_sep, " ")),
-      .groups = "drop"
-    )
+    summarise(Affiliations = paste(unique(aff), collapse = paste0(aff_sep, " ")),
+              .groups = "drop")
 
   # C1: concatenación por documento
   c1_by_doc <- c1_long %>%
     group_by(.rid) %>%
-    summarise(
-      C1 = paste(C1_item, collapse = paste0(aff_sep, " ")),
-      .groups = "drop"
-    )
+    summarise(C1 = paste(C1_item, collapse = paste0(aff_sep, " ")),
+              .groups = "drop")
 
   # devolver df original + nuevas columnas
   df0 %>%

@@ -116,12 +116,26 @@ frequency_keywords <- function(M,
 
   # Guardado (gráficos + Excel)
   if (isTRUE(save)) {
+
+    # Si quiere Excel, necesitamos writexl (Suggests)
+    .redalycR_need("writexl", "to save Excel output")
+
+    # Si pidió svg explícitamente, recomendamos svglite (Suggests)
+    # OJO: no lo hacemos stop porque ggsave puede caer a grDevices::svg()
+    if ("svg" %in% ext && !requireNamespace("svglite", quietly = TRUE)) {
+      warning(
+        "Package 'svglite' is not installed. SVG output may use a fallback device.\n",
+        "Install it with install.packages('svglite') for better SVG output.",
+        call. = FALSE
+      )
+    }
+
     out_dir <- file.path(path.expand("~"), "Documents", "output_redalycR")
     if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 
     base <- file.path(out_dir, sprintf("%s_%s_top%02d", prefix, kw_col, k))
 
-    # Gráficos
+    # Gráficos (ggplot2 es Imports)
     for (e in ext) {
       ggplot2::ggsave(
         filename = paste0(base, ".", e),

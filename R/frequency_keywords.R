@@ -121,7 +121,7 @@ frequency_keywords <- function(M,
     .redalycR_need("writexl", "to save Excel output")
 
     # Si pidió svg explícitamente, recomendamos svglite (Suggests)
-    # OJO: no lo hacemos stop porque ggsave puede caer a grDevices::svg()
+
     if ("svg" %in% ext && !requireNamespace("svglite", quietly = TRUE)) {
       warning(
         "Package 'svglite' is not installed. SVG output may use a fallback device.\n",

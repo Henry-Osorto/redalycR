@@ -95,8 +95,12 @@ frequency_keywords <- function(M,
     tidyr::unnest_longer(DE_list, values_to = "KW") |>
     dplyr::mutate(KW = clean_keyword(KW)) |>
     dplyr::filter(!is.na(KW)) |>
-    { if (!is.null(stop_words)) dplyr::filter(., !KW %in% stop_words) else . } |>
     dplyr::count(KW, sort = TRUE)
+
+  # filtro stopwords (afuera del pipe)
+  if (!is.null(stop_words)) {
+    freq_all <- dplyr::filter(freq_all, !KW %in% stop_words)
+  }
 
   # Top-k para graficar
   top <- freq_all |>

@@ -36,20 +36,14 @@ lang_detect <- function(x, sep = ">>>") {
     if (is.na(txt) || txt == "") return(NA_character_)
 
     # 1. Detectar etiqueta explícita: es:, en:, pt:, fr:
-    explicit <- stringr::str_match(
-      stringr::str_to_lower(txt),
-      "^\\s*(es|en|pt|fr)\\s*:"
-    )[, 2]
+    explicit <- stringr::str_match(stringr::str_to_lower(txt), "^\\s*(es|en|pt|fr)\\s*:")[, 2]
 
     if (!is.na(explicit) && explicit %in% allowed_langs) {
       return(explicit)
     }
 
     # 2. Quitar etiqueta si existe
-    txt_clean <- stringr::str_remove(
-      txt,
-      "^\\s*(es|en|pt|fr)\\s*:\\s*"
-    )
+    txt_clean <- stringr::str_remove(txt, "^\\s*(es|en|pt|fr)\\s*:\\s*")
 
     txt_clean <- stringr::str_squish(txt_clean)
     txt_clean <- gsub("\\d+", " ", txt_clean)
@@ -58,18 +52,14 @@ lang_detect <- function(x, sep = ">>>") {
     if (nchar(txt_clean) < 8) return(NA_character_)
 
     # 3. Detección sobre bloque completo
-    candidates <- c(
-      safe_detect_cld3(txt_clean),
-      safe_detect_cld2(txt_clean)
-    )
+    candidates <- c(safe_detect_cld3(txt_clean),
+                    safe_detect_cld2(txt_clean))
 
     # 4. En keywords, agregar votos por tokens separados
     if (field == "keywords") {
 
-      tokens <- unlist(
-        stringr::str_split(txt_clean, "\\s*[,;/]\\s*"),
-        use.names = FALSE
-      )
+      tokens <- unlist(stringr::str_split(txt_clean, "\\s*[,;/]\\s*"),
+                       use.names = FALSE)
 
       tokens <- stringr::str_squish(tokens)
       tokens <- tokens[nchar(tokens) >= 5]
@@ -77,11 +67,9 @@ lang_detect <- function(x, sep = ">>>") {
       if (length(tokens) > 0) {
         tokens <- tokens[seq_len(min(length(tokens), 6))]
 
-        candidates <- c(
-          candidates,
-          purrr::map_chr(tokens, safe_detect_cld3),
-          purrr::map_chr(tokens, safe_detect_cld2)
-        )
+        candidates <- c(candidates,
+                        purrr::map_chr(tokens, safe_detect_cld3),
+                        purrr::map_chr(tokens, safe_detect_cld2))
       }
     }
 
@@ -163,9 +151,7 @@ lang_detect <- function(x, sep = ">>>") {
     dplyr::summarise(resumen = first_text(.data$resumen),
                      .groups = "drop")
 
-  out <- dplyr::full_join(kw_clean,
-                          abs_clean,
-                          by = c("id", "lang")) |>
+  out <- dplyr::full_join(kw_clean, abs_clean, by = c("id", "lang")) |>
     dplyr::arrange(.data$id, .data$lang) |>
     dplyr::select(id, palabras, lang, resumen)
 

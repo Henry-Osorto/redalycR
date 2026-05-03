@@ -56,8 +56,8 @@
 #'
 #' @export
 redalyc_as_bibliometrics <- function(x, sep = ";",
-                                     lang = c("auto","es","en","pt"),
-                                     fallback_lang = "es",
+                                     lang = c("auto","es","en","pt", "fr"),
+                                     fallback_lang = NULL,
                                      filter_lang_rows = TRUE) {
   lang <- match.arg(lang)
   stopifnot(is.data.frame(x))
@@ -65,20 +65,49 @@ redalyc_as_bibliometrics <- function(x, sep = ";",
 
   out <- lang_detect(x)
 
-  if (lang %in% c("es", "en", "pt")) {
+  if (lang != "auto") {
 
     out <- out |>
-      dplyr::filter(.data$lang == lang) |>
+      dplyr::filter(.data$lang == .env$lang) |>
       dplyr::group_by(.data$id) |>
       dplyr::slice(1) |>
       dplyr::ungroup()
 
+    if (!is.null(fallback_lang) &&
+        fallback_lang %in% c("es", "en", "pt", "fr")) {
+
+      fallback <- lang_detect(x) |>
+        dplyr::filter(.data$lang == .env$fallback_lang) |>
+        dplyr::anti_join(out, by = "id") |>
+        dplyr::group_by(.data$id) |>
+        dplyr::slice(1) |>
+        dplyr::ungroup()
+
+      out <- dplyr::bind_rows(out, fallback)
+    }
+
+  } else {
+
+    out <- out |>
+      dplyr::mutate(priority = match(.data$lang, c("es", "en", "pt", "fr"))) |>
+      dplyr::arrange(.data$id, .data$priority) |>
+      dplyr::group_by(.data$id) |>
+      dplyr::slice(1) |>
+      dplyr::ungroup() |>
+      dplyr::select(-.data$priority)
   }
 
   x <- x |>
-    dplyr::mutate(id = dplyr::row_number())|>
-    dplyr::select(-resumen, -palabras) |>
-    dplyr::left_join(out, by = "id")
+    dplyr::mutate(id = dplyr::row_number()) |>
+    dplyr::select(-dplyr::any_of(c("resumen", "palabras")))
+
+  if (isTRUE(filter_lang_rows) && lang != "auto") {
+    x <- x |>
+      dplyr::inner_join(out, by = "id")
+  } else {
+    x <- x |>
+      dplyr::left_join(out, by = "id")
+  }
 
   # Helpers ----
   `%||%` <- function(a, b) if (!is.null(a)) a else b

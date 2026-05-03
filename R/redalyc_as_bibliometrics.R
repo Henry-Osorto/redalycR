@@ -63,16 +63,22 @@ redalyc_as_bibliometrics <- function(x, sep = ";",
   stopifnot(is.data.frame(x))
   x <- tibble::as_tibble(x)
 
-  out <- redalyc_lang_detect(x)
+  out <- lang_detect(x)
 
-  if(lang =='es'){out <- out |> dplyr::filter(lang == 'es')}
-  else if(lang =='en'){out <- out |> dplyr::filter(lang == 'en')}
-  else if(lang =='pt'){out <- out |> dplyr::filter(lang == 'pt')}
+  if (lang %in% c("es", "en", "pt")) {
+
+    out <- out |>
+      dplyr::filter(.data$lang == lang) |>
+      dplyr::group_by(.data$id) |>
+      dplyr::slice(1) |>
+      dplyr::ungroup()
+
+  }
 
   x <- x |>
     dplyr::mutate(id = dplyr::row_number())|>
     dplyr::select(-resumen, -palabras) |>
-    dplyr::left_join(out)
+    dplyr::left_join(out, by = "id")
 
   # Helpers ----
   `%||%` <- function(a, b) if (!is.null(a)) a else b
